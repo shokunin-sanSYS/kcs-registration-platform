@@ -25,7 +25,10 @@ function send(res: NextApiResponse, status: number, body: OkResponse | ErrRespon
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== "POST") {
     res.setHeader("Allow", "POST");
-    return send(res, 405, { ok: false, error: { code: "method_not_allowed", message: "POST only" } });
+    return send(res, 405, {
+      ok: false,
+      error: { code: "method_not_allowed", message: "POST only" },
+    });
   }
 
   const parsed = validateRegisterBody(req.body);
@@ -53,15 +56,18 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       .single();
 
     if (error) {
-      const anyErr = error as unknown as { code?: string; message?: string; details?: unknown; hint?: unknown };
+      const anyErr = error as unknown as {
+        code?: string;
+        message?: string;
+        details?: unknown;
+        hint?: unknown;
+      };
 
+      // Unique violation on request_id
       if (anyErr.code === "23505") {
         return send(res, 409, {
           ok: false,
-          error: {
-            code: "duplicate_request_id",
-            message: "request_id already exists",
-          },
+          error: { code: "duplicate_request_id", message: "request_id already exists" },
         });
       }
 
@@ -79,9 +85,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       });
     }
 
-    const id = data.id as string;
-    const request_id = data.request_id as string;
+    const id = String((data as any).id);
+    const request_id = String((data as any).request_id);
 
+    // Fire-and-forget: notification failure must not break registration
     runPostSaveHooks({ input, candidateId: id }).catch((e) => {
       console.error("[register] postSaveHooks failed", { request_id, error: e });
     });
