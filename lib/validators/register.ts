@@ -146,17 +146,9 @@ export function validateRegisterBody(
     }
   }
 
-  if (form_type === "general") {
-    if (experience !== null) {
-      errors.push({ field: "experience", message: "must be null for general" });
-    }
-  }
   if (form_type === "beginner") {
     if (!experience) {
       errors.push({ field: "experience", message: "required for beginner" });
-    }
-    if (qualifications !== null) {
-      errors.push({ field: "qualifications", message: "must be null for beginner" });
     }
   }
 
@@ -187,28 +179,34 @@ export function validateRegisterBody(
 }
 
 export function toDbRow(input: RegisterInput): Record<string, unknown> {
+  const normalized = {
+    ...input,
+    qualifications: input.form_type === "general" ? input.qualifications ?? null : null,
+    experience: input.form_type === "beginner" ? input.experience ?? null : null,
+  };
+
   return {
-    request_id: input.request_id,
-    form_type: input.form_type,
-    lp_id: input.lp_id,
+    request_id: normalized.request_id,
+    form_type: normalized.form_type,
+    lp_id: normalized.lp_id,
 
-    name: input.name,
-    birth_year: input.birth_year,
-    tel: input.tel,
-    email: input.email,
+    name: normalized.name,
+    birth_year: normalized.birth_year,
+    tel: normalized.tel,
+    email: normalized.email,
 
-    positions: input.positions.join(","),
+    positions: normalized.positions.join(","),
 
-    qualifications: input.qualifications ? input.qualifications.join(",") : null,
-    experience: input.experience ?? null,
+    qualifications: normalized.qualifications ? normalized.qualifications.join(",") : null,
+    experience: normalized.experience ?? null,
 
-    utm_source: input.utm_source ?? null,
-    utm_medium: input.utm_medium ?? null,
-    utm_campaign: input.utm_campaign ?? null,
-    utm_content: input.utm_content ?? null,
-    utm_term: input.utm_term ?? null,
+    utm_source: normalized.utm_source ?? null,
+    utm_medium: normalized.utm_medium ?? null,
+    utm_campaign: normalized.utm_campaign ?? null,
+    utm_content: normalized.utm_content ?? null,
+    utm_term: normalized.utm_term ?? null,
 
-    referrer: input.referrer ?? null,
-    landing_path: input.landing_path,
+    referrer: normalized.referrer ?? null,
+    landing_path: normalized.landing_path,
   };
 }
