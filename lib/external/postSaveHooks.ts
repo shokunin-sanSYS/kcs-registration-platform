@@ -28,12 +28,35 @@ async function notify(params: { input: RegisterInput; candidateId: string }): Pr
     return;
   }
 
-  const payload = {
+  const payload: Record<string, unknown> = {
     secret,
+
+    // IDs / metadata
     request_id: params.input.request_id,
     form_type: params.input.form_type,
-    created_at: new Date().toISOString(),
+    created_at: (() => {
+      const d = new Date();
+      const jst = new Date(d.getTime() + 9 * 60 * 60 * 1000);
+      const pad = (n: number) => String(n).padStart(2, "0");
+      return `${jst.getFullYear()}-${pad(jst.getMonth() + 1)}-${pad(jst.getDate())} ${pad(jst.getHours())}:${pad(jst.getMinutes())}:${pad(jst.getSeconds())}`;
+    })(),
     candidate_id: params.candidateId,
+
+    // User input (for notifications)
+    name: params.input.name ?? "",
+    birth_year: (params.input as any).birth_year ?? "",
+    tel: (params.input as any).tel ?? "",
+    email: (params.input as any).email ?? "",
+
+    // Step selections (different forms may or may not have these)
+    experience: (params.input as any).experience ?? "",
+    experience_text: (params.input as any).experience_text ?? "",
+
+    positions: (params.input as any).positions ?? [],
+    positions_text: (params.input as any).positions_text ?? "",
+
+    qualifications: (params.input as any).qualifications ?? [],
+    qualifications_text: (params.input as any).qualifications_text ?? "",
   };
 
   try {
